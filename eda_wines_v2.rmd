@@ -1,0 +1,622 @@
+Secrets of wine by Hernan Antolini
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using in your analysis in this code
+# chunk.
+
+# Notice that the parameter "echo" was set to FALSE for this code chunk. This
+# prevents the code from displaying in the knitted HTML output. You should set
+# echo=FALSE for all code chunks in your file, unless it makes sense for your
+# report to show the code that generated a particular plot.
+
+# The other parameters for "message" and "warning" should also be set to FALSE
+# for other code chunks once you have verified that each plot comes out as you
+# want it to. This will clean up the flow of your report.
+
+options(repos="https://cran.rstudio.com" )
+install.packages("ggplot2", dependencies = T, repos = "https://cran.rstudio.com") 
+install.packages("knitr", dependencies = T, repos = "https://cran.rstudio.com")
+install.packages("dplyr", dependencies = T, repos = "https://cran.rstudio.com")
+install.packages("gridExtra", dependencies = T, repos = "https://cran.rstudio.com")
+install.packages("RColorBrewer", dependencies = T, repos = "https://cran.rstudio.com")
+
+
+library(ggplot2)
+library(knitr)
+library(dplyr)
+library(gridExtra)
+library(grid)
+library(RColorBrewer)
+library(scales)
+library(GGally)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Load_the_Data}
+# Load the Data
+
+wines.dataset <- read.csv("/home/tano/dataAnalysis/eda/eda_with_r/wineQualityReds.csv")
+
+```
+<h2 id="Introduction">Overview</h2>
+
+<h3 id="Why red wines ?"></h3>
+
+> I am from Argentina. In the west region of my country, near the Andean mountains, red wine from France, has found a wonderfull place to growth. It 
+seems that it is mostly related with the weather conditions (desert with differences in temperatures within the day and sunny) but, since red wine in 
+Argentina is as famous as futbol or tango, everyone has an opinion on it. So, 
+this dataset, i hope, will be a great opportunity to search for an educated
+opinion, mostly a scientific opinion, on this wonderfull beverage. As romans 
+used to say : "In vino veritas" " ! (In wine, the truth)
+
+<h2 id="Analysis">Univariate</h2>
+
+<h3 id="Univariate Plots Section"></h3>
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Summary}
+
+summary(wines.dataset)
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Strings}
+
+str(wines.dataset)
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Names}
+
+names(wines.dataset)
+```
+
+<h3 id="Univariate Plots Section - Summary First"></h3>
+
+> This red wines data set consist of 13 variables and 1599 observations.
+> There are very chemical related variables (free.sulfur.dioxide, fixed.acidity
+> total.sulfur.dioxide, sulfates, chlorides, etc) what i will start ploting the
+> common ones to explore the set. So my first quest is for "pH" because it use
+> to be related with the kind of ground were the wine growth
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_pH}
+
+qplot(wines.dataset$pH)
+
+```
+
+> OK, so it seems that pH is normaly distributed between our wines . 
+> lets check what is the distribution of quality -lets use factor to 
+> treat it as discrete. The wineQualityInfo.txt files inform us that
+> pH describes "acidic" from very acidic (0) to very basic (14) and that
+> most wines should be between 3 and 4
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_other}
+
+qplot(factor(wines.dataset$quality))
+```
+
+> OK , its clear too. Another almost normal distribution so it is time to 
+> find out what makes those high quality wines being apart from that huge
+> number of medium quality wines in terms of chemical variables.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_fixed_acidity}
+
+qplot(wines.dataset$fixed.acidity)
+
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_volatile_acidity_other}
+
+qplot(wines.dataset$volatile.acidity)
+
+```
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_fixed_acity}
+
+summary(wines.dataset$fixed.acidity)
+
+```
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_volatile_acidity}
+
+summary(wines.dataset$volatile.acidity)
+```
+
+
+> Fixed and volatile acidity seems to be related and we can see that they have
+> similar skewed distributions. It seems there are some outliers in both also
+> since min and max values are far from 1st and 3rd qu. 
+> I am courious about the impact of acidity in quality (related with taste) and
+> wonder if that group of wines with fixed acidity between 11 and 14 aprox 
+> share some special characteristics. 
+> The info file for our dataset has this information about acidicity :
+> Most acids are nonvolatile (do not evaporate) -fixed acidity-, the rest
+> is volatile, were high levels could lead to vinegar taste. So probably our
+> outliers up the 3rd quartile (> 0.7) dont have good taste ...
+> Now check what about the distribution of dioxide variables
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_sulfur_dioxide}
+
+qplot(wines.dataset$total.sulfur.dioxide)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_total_sulfur}
+
+sum(wines.dataset$total.sulfur.dioxide > 50)
+
+```
+
+
+> This is important : over 50 ppm of total sulfur dioxide (SO2) it starts to 
+> became evident in nose and taste and we have 546 observations with numbers 
+> greater that 50 
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_free_sulfur}
+
+qplot(wines.dataset$free.sulfur.dioxide)
+
+```
+
+
+> Lets now check chlorides and sulfates to look for its distribution and 
+> understand is they also bring new questions
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_chlorides}
+
+summary(wines.dataset$chlorides)
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_chlorides_other}
+
+sum(wines.dataset$chlorides > 0.2 & wines.dataset$chlorides < 0.62)
+
+```
+
+> Aprox 2% of the observations have chlorides between 0.2 and 0.62 which is far
+> above the 3rd quartile (0.09). Adjusting breaks and limits we can see that 
+> chlorides is normally distributed betwee 0.01 and 0.1.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_chlorides_rev}
+
+ggplot(wines.dataset, aes(x=chlorides)) +
+  geom_histogram(binwidth = 0.01) +
+scale_x_continuous(breaks = c(0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,
+                              0.09,0.1,0.12,0.14,0.16,0.18),
+                   limits = c(0,quantile(wines.dataset$chlorides, 0.95)))
+
+
+```
+
+> Sulphates contribute to sulfur dioxide gas levels. As we already saw there are
+> observations with high levels of sulfur dioxide gas so they should be related.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_sulphates}
+
+summary(wines.dataset$sulphates)
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_sulphates_rev}
+
+sum(wines.dataset$sulphates > 0.8 & wines.dataset$sulphates < 2)
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_sulphates_hist}
+
+ggplot(wines.dataset, aes(x=sulphates)) +
+  geom_histogram(binwidth = 0.02) +
+scale_x_sqrt()
+
+```
+
+> In sulphates there are more than 200 obs (around 15%) above the 3rd quantile
+> ....similar quantity of wines in highest quality categories (7 and 8) uhm,
+> any correlation between sulphates and wine quality ?? . Should review that
+> against the levels of sulfir dioxide and contribution to nose and taste...
+> interesting.
+
+> And last but non least, residual.sugar, alcohol and density
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_alcohol}
+
+qplot(wines.dataset$alcohol)
+
+```
+
+> What about the difference in distribution between medium alcohol wines (lets
+> say less than the mean -10.42-) and the distribution of wines with high levels
+> of alcohol. Lets plot them separated.
+
+> Now , 3 variables that are related from the info we have : density, residual
+> sugar and alcohol. I understand that density of water depend on % of alcohol
+> and sugar ; the amount of sugar depend on when the fermentations stops, since
+> the fermentation process means sugar to alcohol, residual sugar should 
+> decrease as fermentation is longer which produces more alcohol which affects
+> the density of water. We already look at alcohol levels, lets plot residual
+> sugar and density alongside
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_density_sugar}
+
+plot3 <- qplot(wines.dataset$density)
+plot4 <- qplot(wines.dataset$residual.sugar)
+grid.arrange(plot3, plot4, ncol = 2)
+
+```
+
+> ok, bins need to be adjusted and its time to get into the deal of putting
+> more than two variables together. Before that, lets plot citric acid since
+> impacts "freshness"
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_plots_citric_acid}
+
+qplot(wines.dataset$citric.acid)
+
+```
+
+> Ops, at first sight it seems to me that we should take a look at the relation
+> of this bi-modal like distribution with the other acid properties and the pH
+> position of the wine 
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+
+> There are 1599 wines observed in this dataset with 12 variables which i 
+> would like to group in acid-related (fixed acidity, volatile acidity, citric
+> acid and pH), SO2-related (free sulfur dioxide, total sulfur dioxide, 
+> and sulphates) , fermentation-related (alcohol, density and residual sugar) 
+> and quality and chlorides
+
+> Other observations
+  1. pH is normally distributed and should be around 3 and 4
+  2. quality goes from 0 to 10 with most observations around 5 and 6 as expected
+  3. acidity , fixed and volatile, affects taste. Citric acid also drive the
+  "freshness" of wines so there are lot of work to do around acidity.
+  4. Prescence of SO2 affects the taste and nose of wine and we have some 
+  observations that need to be analyzed in details like those more than 500 with
+  50 ppm  total sulfur dioxide.
+  5. Alcohol, residual sugar and density needs to be analyzed together.
+  
+
+### What is/are the main feature(s) of interest in your dataset?
+
+> From my point of view the main features of this dataset is wine quality. Now
+> the challenge is to understand how the grouped features (SO2 related, acidity
+> related and fermentation related) affects wine perceived quality.
+ 
+
+### What other features in the dataset do you think will help support your \
+investigation into your feature(s) of interest?
+
+> As i mentioned above my plan is to find any correlations between SO2 vars, 
+> acidity vars and fermentation related vars between them and against quality
+
+### Did you create any new variables from existing variables in the dataset?
+
+> No at this time, just created variables from the dataset to analyze the 
+> distribution of alcohol
+
+### Of the features you investigated, were there any unusual distributions? \
+Did you perform any operations on the data to tidy, adjust, or change the form \
+of the data? If so, why did you do this?
+
+> There are outliers or exceptional cases in some distributions theh need to
+> be investigated further. Residual sugar and dioxide distributions are skewed
+> with outliers that require further analysis.
+
+<h2 id="Analysis">Bivariate</h2>
+
+# Bivariate Plots Section
+
+## SO2 related properties analysis against quality
+
+> There are a group of SO2 related properties that affects taste and nose 
+> because of the prescense of SO2 in wine which is a sub-product of fermentation
+> (free sulfur dioxide, total sulfur dioxide, and sulphates)
+> First lets check our initial doubt with sulfures : there are any perceived 
+> relation between quality and wines with total.sulfur.dioxide greater than
+> 50 ppm ?
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_plots_one}
+
+ggplot(wines.dataset, aes(x=quality, y=total.sulfur.dioxide)) +
+  geom_boxplot(aes(group=quality))
+
+```
+
+> Our highest quality wines (8) have the highest median and smaller variation 
+> in total sulfur dioxide but next quality (7) seems to be more nomarl with
+> relation with medium quality (5,6) so lets explore free.sulfur.dioxide
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_plots_two}
+
+ggplot(wines.dataset, aes(x=quality, y=free.sulfur.dioxide)) +
+  geom_boxplot(aes(group=quality))
+
+
+
+```
+
+> So it seems to me that high sulfured observations are outliers as we can 
+> clearly see here and that there are no clear evidence that different wines
+> qualities have specific sulfure composition. Lets move to alcohol and sugar.
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_plots_three}
+
+summary(wines.dataset$residual.sugar)
+```
+
+## fermentation-related (alcohol, density and residual sugar) 
+
+> First lets clarify something : more alcohol means less residual sugar ?
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_plots_four}
+
+sp <- ggplot(wines.dataset, aes(x=residual.sugar, y=alcohol))
+sp + geom_point(position = 'jitter') +
+  scale_x_continuous(limits = c(0,4))
+```
+
+> residual sugar and queality ?
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_plots_five}
+
+sq <- ggplot(wines.dataset, aes(x=quality, y=residual.sugar))
+sq + geom_boxplot(aes(group=quality))
+
+
+```
+
+
+
+> (fixed acidity, volatile acidity, citric > acid and pH)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_plots_six}
+
+vaq <- ggplot(wines.dataset, aes(x=quality, y=volatile.acidity))
+vaq + geom_point(position = 'jitter')
+
+```
+
+> seems to be something here lets check with boxplots
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_plots_seven}
+
+vaq <- ggplot(wines.dataset, aes(x=quality, y=volatile.acidity))
+vaq + geom_boxplot(aes(group=quality))
+
+```
+
+> OK !, now we have something : as soon as acidity gets reduced, quality of 
+> wine seems to improve. So what about pH
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_plots_eight}
+
+phq <- ggplot(wines.dataset, aes(x=quality, y=pH))
+phq + geom_boxplot(aes(group=quality))
+
+
+```
+
+> and citric
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_plots_nine}
+
+caq <- ggplot(wines.dataset, aes(x=quality, y=citric.acid))
+caq + geom_boxplot(aes(group=quality))
+
+
+```
+
+> OK, very nice, queality improves as citric acid prescence growth but
+> volatile acidity is reduced . pH seems to be neutral in this case so
+> i cant wait to move to multivariate analysis. Lets lastly check chlorides
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_plots_ten}
+
+clq <- ggplot(wines.dataset, aes(x=quality, y=chlorides))
+clq + geom_boxplot(aes(group=quality))
+
+```
+
+
+# Bivariate Analysis
+
+
+### Talk about some of the relationships you observed in this part of the \
+investigation. How did the feature(s) of interest vary with other features in \
+the dataset?
+
+> The review was based in the initial assessment were we found three related
+> groups of variables to check against wine quality : SO2 related, fermentation
+> related and acidity related. 
+
+> In the first and second group we could not found any sugestive evidence 
+> of correlation. 
+
+> The third group is the one we'll explore further because quality seems to be
+> altered with differences in acidity
+
+### Did you observe any interesting relationships between the other features \
+(not the main feature(s) of interest)?
+
+> Away from the relationship between acidity (fixed and volatile , citric) with
+> the quality of wine i am still interested in the comments in the dataset file
+> about the impact of sulphures in nose given the amount of SO2. In the Bivariate
+> observations it was not clear its impact on queality what i hope we could 
+> find a surprise on Multivariate explorations.
+
+### What was the strongest relationship you found?
+
+> Strongest relations as i already mentioned is the ones i found in the 
+> third group and mostly for the citric acid and volatile acidity against
+> quality 
+
+
+# Multivariate Plots Section
+
+> Lets classify our wines quality in low and mediaum (under 6) and high quality
+> 7 and 8 so we can clarify the netx plots with more clear definitions.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Multivariate_plots_quality_one}
+
+wd <- wines.dataset
+wd$qualityGroup <- cut(wd$quality, breaks = c(-Inf, 6, Inf),
+                       labels = c("lowAndMedium", "highQuality"))
+
+ggplot(wd, aes(x=citric.acid, y=volatile.acidity, colour=qualityGroup)) +
+  geom_point(shape=3) +
+  scale_shape_manual(values = c(21, 24)) +
+  scale_color_manual(values = c("yellow", "brown")) +
+  annotate("rect", xmin = 0.30, xmax = 0.60, ymin = 0.1, ymax = 0.5, 
+           alpha=.2, fill="red")
+
+```
+
+> Wow, as expected this plot shows the combined incidence of volatile acidity
+> and citric acidity on wine quality. As the rectangle remarks, there is an 
+> area where high quality wines gets grouped which could be categorized as
+> a low volatile acidity and medium to high citric acid area.
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Multivariate_plots_quality_two}
+
+sul <- ggplot(wd, aes(x=total.sulfur.dioxide, y=free.sulfur.dioxide, colour=qualityGroup)) +
+  geom_point() +
+  scale_color_brewer(palette = 'Set1') +
+  scale_x_continuous(lim = c(0, quantile(wines.dataset$total.sulfur.dioxide, 0.95)))
+sul + geom_smooth() +
+  annotate('text', x=65, y=45, label='SO2 in Nose', family='serif',
+           fontface='italic', colour='black', size=6)
+
+```
+
+> OK, so this is the answer to the sulphure mistery ? Probably. It shows that
+> there is a region , over 50ppm of total sulfur dioxide, where high quality
+> wines separate from low and Medium (it is marked with "SO2 in Nose")
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the \
+investigation. Were there features that strengthened each other in terms of \
+looking at your feature(s) of interest?
+
+> I could plot the relationships that i was looking for after reading the txt 
+> file and the plotting of bivariate plots:
+>   1. The relationship between volatile acidity and citric acid over the quality
+       of wines.
+>   2. The impact of sulfur dioxide , for a specific range of values, in the 
+       difference between low and medium and high quality wines
+> included with the dataset and after 
+
+
+### Were there any interesting or surprising interactions between features?
+
+> Yes. Actually it seems that sulfur is something that needs to be carefully 
+> controlled because too much is bad for wine quality and too low means no
+> differentiation with low and medium wines.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Plot_One}
+
+ggplot(wd, aes(x=citric.acid, y=volatile.acidity, colour=qualityGroup)) +
+  geom_point(shape=3) +
+  scale_shape_manual(values = c(21, 24)) +
+  scale_color_manual(values = c("yellow", "brown")) +
+  annotate("rect", xmin = 0.30, xmax = 0.60, ymin = 0.1, ymax = 0.5, 
+           alpha=.2, fill="red") +
+  ggtitle("Impact of acidity in Wine Quality")
+
+```
+
+### Description One
+
+> Red box focus on the area were high quality wines resides. The area goes from
+> around 0.30 to 0.60 presence of citric acid and 0.2 to 0.4 volatile acidity.
+> It looks like citric acid could be higher without affecting negatively the 
+> quality of wine. Citric acid gives a "fresh" sensation to wine taste.
+
+### Plot Two
+```{r echo=FALSE, message=FALSE, warning=FALSE, Plot_Two}
+
+sul <- ggplot(wd, aes(x=total.sulfur.dioxide, y=free.sulfur.dioxide, colour=qualityGroup)) +
+  geom_point() +
+  scale_color_brewer(palette = 'Set1') +
+  scale_x_continuous(lim = c(0, quantile(wines.dataset$total.sulfur.dioxide, 0.95)))
+sul + geom_smooth() +
+  annotate('text', x=65, y=45, label='SO2 in Nose', family='serif',
+           fontface='italic', colour='black', size=6) +
+  ggtitle("Sulfur in your Nose")
+
+```
+
+### Description Two
+
+> "Never in excess" ...and we are not talking in this case about the alcohol 
+> level, we talk about free sulfur dioxide. There is a range of values were 
+> the prescense of free sulfure dioxide and the "bubbles" sensation goes
+> hand in hand with wine quality ....but...if it is in excess then wine will
+> be converted back to a normal wine.
+
+### Plot Three
+```{r echo=FALSE, message=FALSE, warning=FALSE, Plot_Three}
+
+# alcohol, residual sugar, free.sulfur.dioxide
+
+vaq <- ggplot(wd, aes(x=alcohol, y=residual.sugar, colour=qualityGroup))
+vaq + geom_point() +
+  scale_y_continuous(lim = c(1,4)) +
+  scale_color_manual(values = c("yellow", "blue")) +
+  geom_vline(xintercept = 11) +
+  ggtitle("Where sugar matter's")
+  
+
+```
+
+### Description Three
+
+> I wasn not convinced that alcohol has no inpact on wine quality. It is not 
+> something i can explain from formal knowledge but is very common in Argentina
+> that people tend to associate "sweet wines" with "bad wines" and i think that
+> the reasson is somewhere around this relationship which is product of the 
+> fermentation process.
+> So, low and medium wines tend to group below the 11 alcohol degree mark 
+> where 
+------
+
+# Reflection
+
+> OK, reach the final of the exploration. It is a great dataset to learn and it
+> is a very interesting topic mostly for countries like argentina where wine
+> is so pervasive and most of argentinians like to have educated opinions on
+> wine quality.
+> I would like to have included in the dataset at least 1 additional variable:
+> it would be nice to have the production year of the wine. The reasson is 
+> because it it perceived that older wines are better but not old wines got 
+> better the same.
+> It suprised me the impact of acidity factors in wine quality. It would be nice
+> to explore if there are any relation between acidity and different wineyards
+> locations (that could be another variable to include in the dataset). 
+> Basically we could say that quality of wine is impacted by citric acid (direct)
+> and volatile acidity (inverse). Additionaly , and closelly related with the
+> fermentation process, as sugar get consumed to produce alcohol SO2 gets 
+> liberated and some gain prescense in the wine itself. A mid term prescense of
+> SO2 with moderate to high alcohol graduation seems to inpact the quality of
+> wine too.
+> I got only minor problems during the analisis and they were not directly 
+> related with the dataset. It was in the bivariate section where sometimes it
+> was difficult for me to express or review the relation with clarity using
+> scatter plots and that's the reasson why i choosed to move the plots to 
+> boxplots. I guess i needed to review in more detail the options to adjust
+> scatter plots and better deal with different time of variables on them.
+> 
